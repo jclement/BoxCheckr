@@ -91,6 +91,55 @@
     </div>
     {{end}}
 
+    {{if .IsAdmin}}
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Admin Notes</h2>
+            <p class="text-sm text-gray-500">Internal notes about this machine (markdown supported)</p>
+        </div>
+        <div class="p-6">
+            <form method="POST" action="/machines/{{.Machine.ID}}/notes" class="mb-6">
+                <textarea name="content" rows="3" placeholder="Add a note..." required
+                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm p-3 border"></textarea>
+                <div class="mt-2 flex justify-end">
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium">
+                        Add Note
+                    </button>
+                </div>
+            </form>
+            {{if .Notes}}
+            <div class="space-y-4">
+                {{range .Notes}}
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="font-medium text-gray-900">{{.Author}}</span>
+                                <span class="text-xs text-gray-500">{{.CreatedAt.Format "Jan 2, 2006 3:04 PM"}}</span>
+                                {{if ne .CreatedAt.Unix .UpdatedAt.Unix}}
+                                <span class="text-xs text-gray-400">(edited)</span>
+                                {{end}}
+                            </div>
+                            <div class="prose prose-sm max-w-none text-gray-700 note-content">{{.Content}}</div>
+                        </div>
+                        <form method="POST" action="/machines/{{$.Machine.ID}}/notes/{{.ID}}/delete" class="ml-4" onsubmit="return confirm('Delete this note?');">
+                            <button type="submit" class="text-gray-400 hover:text-red-600">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {{end}}
+            </div>
+            {{else}}
+            <p class="text-gray-500 text-sm">No notes yet.</p>
+            {{end}}
+        </div>
+    </div>
+    {{end}}
+
     <div class="bg-white shadow rounded-lg overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200">
             <h2 class="text-lg font-semibold text-gray-900">Install Script</h2>
@@ -306,7 +355,9 @@ function updateCommands() {
         const psCmd = 'irm "' + scriptURL + '" | iex';
         document.getElementById('quick-run-code-win').textContent = psCmd;
     } else {
-        const bashCmd = 'curl -fsSL "' + scriptURL + '" | bash';
+        const bashCmd = currentPlatform === 'linux'
+            ? 'curl -fsSL "' + scriptURL + '" | sudo bash'
+            : 'curl -fsSL "' + scriptURL + '" | bash';
         document.getElementById('quick-run-code').textContent = bashCmd;
     }
 
@@ -340,5 +391,16 @@ document.addEventListener('DOMContentLoaded', function() {
     setPlatform(detected);
     setMode('onetime');
 });
+
+// Render markdown in notes after marked.js loads
+function renderMarkdownNotes() {
+    if (typeof marked !== 'undefined') {
+        marked.setOptions({ breaks: true });
+        document.querySelectorAll('.note-content').forEach(el => {
+            el.innerHTML = marked.parse(el.textContent);
+        });
+    }
+}
 </script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" onload="renderMarkdownNotes()"></script>
 {{end}}

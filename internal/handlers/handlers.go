@@ -78,6 +78,7 @@ type PageData struct {
 	Machine       *db.Machine
 	Latest        *db.InventorySnapshot
 	History       []db.InventorySnapshot
+	Notes         []db.MachineNote
 	Success       bool
 	FilterOwner   string
 	FilterMachine string

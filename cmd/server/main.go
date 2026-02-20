@@ -63,6 +63,10 @@ func main() {
 	// Script endpoint - NO AUTH (called by curl from terminal)
 	mux.HandleFunc("GET /machines/{id}/script", h.MachineScript)
 
+	// Machine notes (admin only)
+	mux.Handle("POST /machines/{id}/notes", authMiddleware.RequireAdmin(http.HandlerFunc(h.AddMachineNote)))
+	mux.Handle("POST /machines/{id}/notes/{noteId}/delete", authMiddleware.RequireAdmin(http.HandlerFunc(h.DeleteMachineNote)))
+
 	// Admin routes (require admin)
 	mux.Handle("GET /admin/machines", authMiddleware.RequireAdmin(http.HandlerFunc(h.AdminMachines)))
 	mux.Handle("POST /admin/machines/{id}/delete", authMiddleware.RequireAdmin(http.HandlerFunc(h.AdminDeleteMachine)))

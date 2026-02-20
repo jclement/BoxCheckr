@@ -40,7 +40,19 @@ type InventorySnapshot struct {
 // MachineWithOwner combines machine info with owner details for admin views
 type MachineWithOwner struct {
 	Machine
-	OwnerEmail string              `json:"owner_email"`
-	OwnerName  string              `json:"owner_name"`
-	Latest     *InventorySnapshot  `json:"latest,omitempty"`
+	OwnerEmail string             `json:"owner_email"`
+	OwnerName  string             `json:"owner_name"`
+	Latest     *InventorySnapshot `json:"latest,omitempty"`
+	Notes      []MachineNote      `json:"notes,omitempty"`
+}
+
+// MachineNote represents an admin note on a machine
+type MachineNote struct {
+	ID        int64     `json:"id"`
+	MachineID string    `json:"machine_id"`
+	AuthorID  string    `json:"author_id"`
+	Author    string    `json:"author"`  // Author name for display
+	Content   string    `json:"content"` // Markdown content
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }

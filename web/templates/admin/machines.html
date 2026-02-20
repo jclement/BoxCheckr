@@ -5,12 +5,15 @@
     body { background: white !important; }
     main { padding: 0 !important; max-width: none !important; }
     .print-header { display: block !important; }
+    .print-only { display: block !important; }
     .shadow { box-shadow: none !important; }
     table { font-size: 9px !important; }
     td, th { padding: 2px 6px !important; }
     .rounded-lg { border-radius: 0 !important; }
+    .print-notes { margin-top: 24px; page-break-inside: avoid; }
 }
 .print-header { display: none; }
+.print-only { display: none; }
 .status-badge { position: relative; cursor: help; }
 .status-badge:hover::after {
     content: attr(data-tooltip);
@@ -81,6 +84,7 @@
                     <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">FW</th>
                     <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lock</th>
                     <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Report</th>
+                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
                     <th scope="col" class="relative px-3 py-2 no-print"><span class="sr-only">Actions</span></th>
                 </tr>
             </thead>
@@ -145,6 +149,9 @@
                     <td class="px-3 py-2 whitespace-nowrap text-gray-500">
                         {{if .Latest}}{{.Latest.CollectedAt.Format "Jan 2"}}{{else}}<span class="text-gray-400">-</span>{{end}}
                     </td>
+                    <td class="px-3 py-2 whitespace-nowrap text-gray-500">
+                        {{if .Notes}}{{len .Notes}}{{else}}-{{end}}
+                    </td>
                     <td class="px-3 py-2 whitespace-nowrap text-right font-medium space-x-2 no-print">
                         <a href="/machines/{{.ID}}" class="text-indigo-600 hover:text-indigo-900">View</a>
                         <button onclick="confirmDelete('{{.ID}}', '{{.Name}}', '{{.OwnerEmail}}')"
@@ -166,6 +173,24 @@
                 {{if or .FilterOwner .FilterMachine}}Try adjusting your filters.{{else}}No machines have been enrolled yet.{{end}}
             </p>
         </div>
+        {{end}}
+    </div>
+
+    <!-- Print-only notes section -->
+    <div class="print-only print-notes">
+        <h2 class="text-lg font-bold mt-8 mb-4">Machine Notes</h2>
+        {{range .Machines}}
+        {{if .Notes}}
+        <div class="mb-4 border-b pb-2">
+            <h3 class="font-semibold">{{.Name}} ({{.OwnerName}})</h3>
+            {{range .Notes}}
+            <div class="ml-4 mt-1">
+                <span class="text-xs text-gray-500">{{.Author}} - {{.CreatedAt.Format "Jan 2, 2006"}}:</span>
+                <div class="prose prose-sm max-w-none text-sm note-content">{{.Content}}</div>
+            </div>
+            {{end}}
+        </div>
+        {{end}}
         {{end}}
     </div>
 </div>
@@ -230,5 +255,16 @@ document.getElementById('delete-modal').addEventListener('click', function(e) {
         closeDeleteModal();
     }
 });
+
+// Render markdown in notes after marked.js loads
+function renderMarkdownNotes() {
+    if (typeof marked !== 'undefined') {
+        marked.setOptions({ breaks: true });
+        document.querySelectorAll('.note-content').forEach(el => {
+            el.innerHTML = marked.parse(el.textContent);
+        });
+    }
+}
 </script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" onload="renderMarkdownNotes()"></script>
 {{end}}

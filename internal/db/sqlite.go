@@ -75,6 +75,17 @@ func (db *DB) migrate() error {
 	CREATE INDEX IF NOT EXISTS idx_machines_enrollment_token ON machines(enrollment_token);
 	CREATE INDEX IF NOT EXISTS idx_inventory_snapshots_machine_id ON inventory_snapshots(machine_id);
 	CREATE INDEX IF NOT EXISTS idx_inventory_snapshots_collected_at ON inventory_snapshots(collected_at);
+
+	CREATE TABLE IF NOT EXISTS machine_notes (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		machine_id TEXT NOT NULL REFERENCES machines(id) ON DELETE CASCADE,
+		author_id TEXT NOT NULL REFERENCES users(id),
+		content TEXT NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_machine_notes_machine_id ON machine_notes(machine_id);
 	`
 
 	_, err := db.conn.Exec(schema)
@@ -250,10 +261,12 @@ func (db *DB) GetAllMachinesWithOwners(filterOwner, filterMachine string) ([]Mac
 		machines = append(machines, m)
 	}
 
-	// Fetch latest snapshot for each machine
+	// Fetch latest snapshot and notes for each machine
 	for i := range machines {
 		latest, _ := db.GetLatestSnapshot(machines[i].ID)
 		machines[i].Latest = latest
+		notes, _ := db.GetMachineNotes(machines[i].ID)
+		machines[i].Notes = notes
 	}
 
 	return machines, rows.Err()
@@ -413,4 +426,75 @@ func (db *DB) GetUserDashboardStats(userID string) (*DashboardStats, error) {
 	}
 
 	return stats, rows.Err()
+}
+
+// Machine notes operations
+
+func (db *DB) CreateMachineNote(machineID, authorID, content string) (*MachineNote, error) {
+	result, err := db.conn.Exec(`
+		INSERT INTO machine_notes (machine_id, author_id, content) VALUES (?, ?, ?)
+	`, machineID, authorID, content)
+	if err != nil {
+		return nil, err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+
+	return db.GetMachineNote(id)
+}
+
+func (db *DB) GetMachineNote(id int64) (*MachineNote, error) {
+	var n MachineNote
+	err := db.conn.QueryRow(`
+		SELECT n.id, n.machine_id, n.author_id, u.name, n.content, n.created_at, n.updated_at
+		FROM machine_notes n
+		JOIN users u ON n.author_id = u.id
+		WHERE n.id = ?
+	`, id).Scan(&n.ID, &n.MachineID, &n.AuthorID, &n.Author, &n.Content, &n.CreatedAt, &n.UpdatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &n, nil
+}
+
+func (db *DB) GetMachineNotes(machineID string) ([]MachineNote, error) {
+	rows, err := db.conn.Query(`
+		SELECT n.id, n.machine_id, n.author_id, u.name, n.content, n.created_at, n.updated_at
+		FROM machine_notes n
+		JOIN users u ON n.author_id = u.id
+		WHERE n.machine_id = ?
+		ORDER BY n.created_at DESC
+	`, machineID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var notes []MachineNote
+	for rows.Next() {
+		var n MachineNote
+		if err := rows.Scan(&n.ID, &n.MachineID, &n.AuthorID, &n.Author, &n.Content, &n.CreatedAt, &n.UpdatedAt); err != nil {
+			return nil, err
+		}
+		notes = append(notes, n)
+	}
+	return notes, rows.Err()
+}
+
+func (db *DB) UpdateMachineNote(id int64, content string) error {
+	_, err := db.conn.Exec(`
+		UPDATE machine_notes SET content = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?
+	`, content, id)
+	return err
+}
+
+func (db *DB) DeleteMachineNote(id int64) error {
+	_, err := db.conn.Exec(`DELETE FROM machine_notes WHERE id = ?`, id)
+	return err
 }
