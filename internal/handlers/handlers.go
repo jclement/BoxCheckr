@@ -49,11 +49,24 @@ func New(database *db.DB, oidc *auth.OIDCProvider, sessions *middleware.SessionS
 	// Admin templates
 	adminTemplates := []string{
 		"machines.html",
+		"share.html",
 	}
 
 	for _, page := range adminTemplates {
 		pagePath := filepath.Join("web", "templates", "admin", page)
 		tmpl := template.Must(template.New("").Funcs(funcMap).ParseFiles(basePath, pagePath))
+		templates[page] = tmpl
+	}
+
+	// Public templates (for shared links, no auth header)
+	publicBasePath := filepath.Join("web", "templates", "public_base.html")
+	publicTemplates := []string{
+		"shared.html",
+	}
+
+	for _, page := range publicTemplates {
+		pagePath := filepath.Join("web", "templates", "public", page)
+		tmpl := template.Must(template.New("").Funcs(funcMap).ParseFiles(publicBasePath, pagePath))
 		templates[page] = tmpl
 	}
 
@@ -85,6 +98,11 @@ type PageData struct {
 	Success       bool
 	FilterOwner   string
 	FilterMachine string
+
+	// Share links
+	ShareLinks []db.ShareLink
+	ShareLink  *db.ShareLink
+	NewLinkID  string
 
 	// Error page data
 	ErrorCode    int
@@ -131,6 +149,31 @@ func (h *Handlers) renderError(w http.ResponseWriter, r *http.Request, code int,
 		ErrorCode:    code,
 		ErrorMessage: message,
 	})
+}
+
+func (h *Handlers) renderPublic(w http.ResponseWriter, name string, data *PageData) {
+	if data == nil {
+		data = &PageData{}
+	}
+	data.BaseURL = h.baseURL
+	data.Version = h.version
+
+	tmpl, ok := h.templates[name]
+	if !ok {
+		log.Printf("Template not found: %s", name)
+		http.Error(w, "Template not found: "+name, http.StatusInternalServerError)
+		return
+	}
+
+	var buf bytes.Buffer
+	if err := tmpl.ExecuteTemplate(&buf, "base.html", data); err != nil {
+		log.Printf("Template error: %v", err)
+		http.Error(w, "Template error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	buf.WriteTo(w)
 }
 
 func (h *Handlers) NotFound(w http.ResponseWriter, r *http.Request) {

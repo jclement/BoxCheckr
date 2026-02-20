@@ -86,6 +86,15 @@ func (db *DB) migrate() error {
 	);
 
 	CREATE INDEX IF NOT EXISTS idx_machine_notes_machine_id ON machine_notes(machine_id);
+
+	CREATE TABLE IF NOT EXISTS share_links (
+		id TEXT PRIMARY KEY,
+		created_by TEXT NOT NULL REFERENCES users(id),
+		expires_at DATETIME NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_share_links_expires_at ON share_links(expires_at);
 	`
 
 	_, err := db.conn.Exec(schema)
@@ -605,4 +614,91 @@ func (db *DB) UpdateMachineNote(id int64, content string) error {
 func (db *DB) DeleteMachineNote(id int64) error {
 	_, err := db.conn.Exec(`DELETE FROM machine_notes WHERE id = ?`, id)
 	return err
+}
+
+// Share link operations
+
+func (db *DB) CreateShareLink(createdBy string, expiresAt time.Time) (*ShareLink, error) {
+	// Generate a large random ID for the share link
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return nil, err
+	}
+	id := base64.URLEncoding.EncodeToString(b)
+
+	_, err := db.conn.Exec(`
+		INSERT INTO share_links (id, created_by, expires_at) VALUES (?, ?, ?)
+	`, id, createdBy, expiresAt)
+	if err != nil {
+		return nil, err
+	}
+
+	return db.GetShareLink(id)
+}
+
+func (db *DB) GetShareLink(id string) (*ShareLink, error) {
+	var s ShareLink
+	err := db.conn.QueryRow(`
+		SELECT id, created_by, expires_at, created_at
+		FROM share_links
+		WHERE id = ?
+	`, id).Scan(&s.ID, &s.CreatedBy, &s.ExpiresAt, &s.CreatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &s, nil
+}
+
+func (db *DB) GetValidShareLink(id string) (*ShareLink, error) {
+	var s ShareLink
+	err := db.conn.QueryRow(`
+		SELECT id, created_by, expires_at, created_at
+		FROM share_links
+		WHERE id = ? AND expires_at > CURRENT_TIMESTAMP
+	`, id).Scan(&s.ID, &s.CreatedBy, &s.ExpiresAt, &s.CreatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &s, nil
+}
+
+func (db *DB) GetAllShareLinks() ([]ShareLink, error) {
+	rows, err := db.conn.Query(`
+		SELECT id, created_by, expires_at, created_at
+		FROM share_links
+		ORDER BY created_at DESC
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var links []ShareLink
+	for rows.Next() {
+		var s ShareLink
+		if err := rows.Scan(&s.ID, &s.CreatedBy, &s.ExpiresAt, &s.CreatedAt); err != nil {
+			return nil, err
+		}
+		links = append(links, s)
+	}
+	return links, rows.Err()
+}
+
+func (db *DB) DeleteShareLink(id string) error {
+	_, err := db.conn.Exec(`DELETE FROM share_links WHERE id = ?`, id)
+	return err
+}
+
+func (db *DB) DeleteExpiredShareLinks() (int64, error) {
+	result, err := db.conn.Exec(`DELETE FROM share_links WHERE expires_at <= CURRENT_TIMESTAMP`)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }

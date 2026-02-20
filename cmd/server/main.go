@@ -73,6 +73,12 @@ func main() {
 	// Admin routes (require admin)
 	mux.Handle("GET /admin/machines", authMiddleware.RequireAdmin(http.HandlerFunc(h.AdminMachines)))
 	mux.Handle("POST /admin/machines/{id}/delete", authMiddleware.RequireAdmin(http.HandlerFunc(h.AdminDeleteMachine)))
+	mux.Handle("GET /admin/share", authMiddleware.RequireAdmin(http.HandlerFunc(h.AdminShareLinks)))
+	mux.Handle("POST /admin/share", authMiddleware.RequireAdmin(http.HandlerFunc(h.CreateShareLink)))
+	mux.Handle("POST /admin/share/{id}/delete", authMiddleware.RequireAdmin(http.HandlerFunc(h.DeleteShareLink)))
+
+	// Public share link view (NO AUTH)
+	mux.HandleFunc("GET /share/{id}", h.ViewSharedInventory)
 
 	// API routes (token auth)
 	mux.HandleFunc("POST /api/v1/inventory", h.SubmitInventory)

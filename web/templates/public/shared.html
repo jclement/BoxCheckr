@@ -1,0 +1,197 @@
+{{define "content"}}
+<style>
+@media print {
+    nav, footer, .no-print { display: none !important; }
+    body { background: white !important; }
+    main { padding: 0 !important; max-width: none !important; }
+    .print-header { display: block !important; }
+    .print-only { display: block !important; }
+    .shadow { box-shadow: none !important; }
+    table { font-size: 9px !important; }
+    td, th { padding: 2px 6px !important; }
+    .rounded-lg { border-radius: 0 !important; }
+    .print-notes { margin-top: 24px; page-break-inside: avoid; }
+}
+.print-header { display: none; }
+.print-only { display: none; }
+.status-badge { position: relative; cursor: help; }
+.status-badge:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 100%;
+    margin-bottom: 4px;
+    padding: 4px 8px;
+    background: #1f2937;
+    color: white;
+    font-size: 11px;
+    border-radius: 4px;
+    white-space: nowrap;
+    z-index: 50;
+}
+</style>
+
+<div class="space-y-6">
+    <div class="print-header">
+        <h1 class="text-xl font-bold">BoxCheckr - Machine Inventory Report</h1>
+        <p class="text-sm text-gray-600">Generated: {{now.Format "Jan 2, 2006 3:04 PM"}}</p>
+    </div>
+
+    <div class="no-print">
+        <h1 class="text-2xl font-bold text-gray-900">Machine Inventory</h1>
+        <p class="mt-1 text-gray-600">Read-only view of all enrolled devices</p>
+    </div>
+
+    <div class="bg-white shadow rounded-lg overflow-x-auto">
+        <div class="px-4 py-2 border-b border-gray-200 bg-gray-50">
+            <span class="text-sm text-gray-600">{{if .Machines}}{{len .Machines}}{{else}}0{{end}} machines</span>
+        </div>
+        {{if .Machines}}
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
+                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Machine</th>
+                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">OS</th>
+                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Disk</th>
+                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">AV</th>
+                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">FW</th>
+                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lock</th>
+                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Report</th>
+                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {{range .Machines}}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-3 py-2 whitespace-nowrap">
+                        <div class="font-medium text-gray-900">{{.OwnerName}}</div>
+                        <div class="text-xs text-gray-500">{{.OwnerEmail}}</div>
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap">
+                        <div class="font-medium text-gray-900">{{.Name}}</div>
+                        {{if .Latest}}<div class="text-xs text-gray-500">{{.Latest.Hostname}}</div>{{end}}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap text-gray-500">
+                        {{if .Latest}}{{.Latest.OS}} {{.Latest.OSVersion}}{{else}}<span class="text-gray-400">-</span>{{end}}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap">
+                        {{if .Latest}}
+                            {{if .Latest.DiskEncrypted}}
+                            <span class="status-badge inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800" data-tooltip="{{.Latest.DiskEncryptionDetails}}">Yes</span>
+                            {{else}}
+                            <span class="status-badge inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800" data-tooltip="{{.Latest.DiskEncryptionDetails}}">No</span>
+                            {{end}}
+                        {{else}}
+                        <span class="text-gray-400">-</span>
+                        {{end}}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap">
+                        {{if .Latest}}
+                            {{if .Latest.AntivirusEnabled}}
+                            <span class="status-badge inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800" data-tooltip="{{.Latest.AntivirusDetails}}">Yes</span>
+                            {{else}}
+                            <span class="status-badge inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800" data-tooltip="{{.Latest.AntivirusDetails}}">No</span>
+                            {{end}}
+                        {{else}}
+                        <span class="text-gray-400">-</span>
+                        {{end}}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap">
+                        {{if .Latest}}
+                            {{if .Latest.FirewallEnabled}}
+                            <span class="status-badge inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800" data-tooltip="{{.Latest.FirewallDetails}}">Yes</span>
+                            {{else}}
+                            <span class="status-badge inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800" data-tooltip="{{.Latest.FirewallDetails}}">No</span>
+                            {{end}}
+                        {{else}}
+                        <span class="text-gray-400">-</span>
+                        {{end}}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap">
+                        {{if .Latest}}
+                            {{if .Latest.ScreenLockEnabled}}
+                            <span class="status-badge inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800" data-tooltip="{{.Latest.ScreenLockDetails}}">Yes</span>
+                            {{else}}
+                            <span class="status-badge inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800" data-tooltip="{{.Latest.ScreenLockDetails}}">No</span>
+                            {{end}}
+                        {{else}}
+                        <span class="text-gray-400">-</span>
+                        {{end}}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap text-gray-500">
+                        {{if .Latest}}{{.Latest.CollectedAt.Format "Jan 2"}}{{else}}<span class="text-gray-400">-</span>{{end}}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap text-gray-500">
+                        {{if .Notes}}{{len .Notes}}{{else}}-{{end}}
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+        {{else}}
+        <div class="text-center py-12">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No machines found</h3>
+            <p class="mt-1 text-sm text-gray-500">No machines have been enrolled yet.</p>
+        </div>
+        {{end}}
+    </div>
+
+    <!-- Machine Notes Section -->
+    {{range .Machines}}
+    {{if .Notes}}
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+            <h3 class="font-semibold text-gray-900">{{.Name}} <span class="font-normal text-gray-500">({{.OwnerName}})</span></h3>
+        </div>
+        <div class="divide-y divide-gray-100">
+            {{range .Notes}}
+            <div class="px-4 py-3">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-sm font-medium text-gray-700">{{.Author}}</span>
+                    <span class="text-xs text-gray-500">{{.CreatedAt.Format "Jan 2, 2006 3:04 PM"}}</span>
+                </div>
+                <div class="prose prose-sm max-w-none text-gray-600 note-content">{{.Content}}</div>
+            </div>
+            {{end}}
+        </div>
+    </div>
+    {{end}}
+    {{end}}
+
+    <!-- Print-only notes section (consolidated) -->
+    <div class="print-only print-notes">
+        <h2 class="text-lg font-bold mt-8 mb-4">Machine Notes</h2>
+        {{range .Machines}}
+        {{if .Notes}}
+        <div class="mb-4 border-b pb-2">
+            <h3 class="font-semibold">{{.Name}} ({{.OwnerName}})</h3>
+            {{range .Notes}}
+            <div class="ml-4 mt-1">
+                <span class="text-xs text-gray-500">{{.Author}} - {{.CreatedAt.Format "Jan 2, 2006"}}:</span>
+                <div class="prose prose-sm max-w-none text-sm note-content">{{.Content}}</div>
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+        {{end}}
+    </div>
+</div>
+
+<script>
+// Render markdown in notes after marked.js loads
+function renderMarkdownNotes() {
+    if (typeof marked !== 'undefined') {
+        marked.setOptions({ breaks: true });
+        document.querySelectorAll('.note-content').forEach(el => {
+            el.innerHTML = marked.parse(el.textContent);
+        });
+    }
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" onload="renderMarkdownNotes()"></script>
+{{end}}

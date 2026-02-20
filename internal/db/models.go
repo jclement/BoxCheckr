@@ -62,3 +62,11 @@ type MachineNote struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
+
+// ShareLink represents a time-limited shareable link to view all machines in the organization
+type ShareLink struct {
+	ID        string    `json:"id"`
+	CreatedBy string    `json:"created_by"` // Admin who created the link
+	ExpiresAt time.Time `json:"expires_at"`
+	CreatedAt time.Time `json:"created_at"`
+}
