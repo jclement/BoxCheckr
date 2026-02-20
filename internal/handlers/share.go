@@ -65,7 +65,7 @@ func (h *Handlers) AdminShareLinks(w http.ResponseWriter, r *http.Request) {
 
 	h.render(w, r, "share.html", &PageData{
 		Title:      "Share Links",
-		Active:     "admin",
+		Active:     "share",
 		ShareLinks: links,
 		NewLinkID:  newLinkID,
 	})
