@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 type DB struct {
@@ -16,7 +16,7 @@ type DB struct {
 }
 
 func New(path string) (*DB, error) {
-	conn, err := sql.Open("sqlite3", path+"?_journal_mode=WAL&_foreign_keys=on")
+	conn, err := sql.Open("sqlite", path+"?_journal_mode=WAL&_foreign_keys=on")
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
