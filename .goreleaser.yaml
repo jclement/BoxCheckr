@@ -20,7 +20,7 @@ builds:
       - arm64
     mod_timestamp: "{{ .CommitTimestamp }}"
     ldflags:
-      - -s -w
+      - -s -w -X main.Version={{.Version}}
 
 archives:
   - id: boxcheckr

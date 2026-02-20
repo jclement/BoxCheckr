@@ -11,6 +11,9 @@ import (
 	"github.com/jclement/boxcheckr/internal/middleware"
 )
 
+// Version is set at build time via ldflags
+var Version = "dev"
+
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -41,7 +44,7 @@ func main() {
 	sessionStore := middleware.NewSessionStore()
 	authMiddleware := middleware.NewAuthMiddleware(sessionStore, database)
 
-	h := handlers.New(database, oidcProvider, sessionStore, baseURL)
+	h := handlers.New(database, oidcProvider, sessionStore, baseURL, Version)
 
 	mux := http.NewServeMux()
 

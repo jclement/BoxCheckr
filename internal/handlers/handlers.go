@@ -22,10 +22,11 @@ type Handlers struct {
 	oidc      *auth.OIDCProvider
 	sessions  *middleware.SessionStore
 	baseURL   string
+	version   string
 	templates map[string]*template.Template
 }
 
-func New(database *db.DB, oidc *auth.OIDCProvider, sessions *middleware.SessionStore, baseURL string) *Handlers {
+func New(database *db.DB, oidc *auth.OIDCProvider, sessions *middleware.SessionStore, baseURL string, version string) *Handlers {
 	templates := make(map[string]*template.Template)
 	basePath := filepath.Join("web", "templates", "base.html")
 
@@ -61,6 +62,7 @@ func New(database *db.DB, oidc *auth.OIDCProvider, sessions *middleware.SessionS
 		oidc:      oidc,
 		sessions:  sessions,
 		baseURL:   baseURL,
+		version:   version,
 		templates: templates,
 	}
 }
@@ -71,6 +73,7 @@ type PageData struct {
 	User    *db.User
 	IsAdmin bool
 	BaseURL string
+	Version string
 
 	// Page-specific data
 	Stats         *db.DashboardStats
@@ -99,6 +102,7 @@ func (h *Handlers) render(w http.ResponseWriter, r *http.Request, name string, d
 		data.IsAdmin = middleware.IsAdmin(r.Context())
 	}
 	data.BaseURL = h.baseURL
+	data.Version = h.version
 
 	// Get the template for this page
 	tmpl, ok := h.templates[name]
