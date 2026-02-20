@@ -18,7 +18,7 @@
 
 - **Self-service enrollment** - Users enroll their own machines with a simple copy-paste script
 - **Transparent collection** - Scripts are single-file, inspectable, and collect only what's documented
-- **Minimal data** - Only collects: hostname, OS version, disk encryption status, antivirus status
+- **Minimal data** - Only collects: hostname, OS version, disk encryption, antivirus, firewall, screen lock status
 - **Append-only history** - All inventory snapshots are preserved for compliance auditing
 - **Microsoft Entra ID auth** - SSO with your organization's Azure AD
 - **Role-based access** - Admins see all machines, users see only their own
@@ -32,6 +32,8 @@
 | OS Version | `sw_vers` | WMI | `/etc/os-release` |
 | Disk Encryption | FileVault status | BitLocker status | LUKS detection |
 | Antivirus | XProtect | Windows Defender | ClamAV |
+| Firewall | Application Firewall | Windows Firewall | ufw/firewalld/iptables |
+| Screen Lock | Password/Touch ID required | Lock screen timeout | GNOME/KDE settings |
 
 **Not collected:** passwords, files, browsing history, keystrokes, screenshots, or personal data.
 
@@ -143,7 +145,12 @@ Content-Type: application/json
   "disk_encrypted": true,
   "disk_encryption_details": "FileVault enabled",
   "antivirus_enabled": true,
-  "antivirus_details": "XProtect active"
+  "antivirus_details": "XProtect active",
+  "firewall_enabled": true,
+  "firewall_details": "macOS Application Firewall enabled",
+  "screen_lock_enabled": true,
+  "screen_lock_timeout": 5,
+  "screen_lock_details": "Screen lock immediately after 5 min idle"
 }
 ```
 
