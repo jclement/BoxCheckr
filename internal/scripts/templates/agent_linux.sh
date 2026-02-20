@@ -23,6 +23,13 @@ set -e
 TOKEN="{{.Token}}"
 SERVER="{{.ServerURL}}"
 
+# Check if running as root (needed for accurate firewall detection)
+if [[ $EUID -ne 0 ]]; then
+    echo "Warning: Not running as root. Some checks (firewall status) may be inaccurate."
+    echo "For best results, run with: sudo bash"
+    echo ""
+fi
+
 # Get system info
 OS="linux"
 if [[ -f /etc/os-release ]]; then
