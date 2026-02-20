@@ -228,7 +228,8 @@
             </div>
 
             <div id="uninstall-note" class="mt-4 text-sm text-gray-500 hidden">
-                To uninstall later: <code class="bg-gray-100 px-1.5 py-0.5 rounded text-gray-700">boxcheckr-uninstall</code>
+                <span>To uninstall later:</span>
+                <div id="uninstall-cmd"></div>
             </div>
 
             <div class="mt-6 p-4 bg-blue-50 rounded-lg">
@@ -345,6 +346,13 @@ function setPlatform(platform) {
     // Toggle Unix/Windows command display
     document.getElementById('quick-run-unix').classList.toggle('hidden', platform === 'windows');
     document.getElementById('quick-run-windows').classList.toggle('hidden', platform !== 'windows');
+    // Update uninstall command for platform
+    const uninstallCmd = document.getElementById('uninstall-cmd');
+    if (platform === 'windows') {
+        uninstallCmd.innerHTML = '<pre class="bg-gray-100 px-2 py-1.5 rounded text-gray-700 text-xs mt-1 overflow-x-auto">Unregister-ScheduledTask -TaskName \'BoxCheckr Agent\' -Confirm:$false\nRemove-Item -Recurse "$env:LOCALAPPDATA\\BoxCheckr"</pre>';
+    } else {
+        uninstallCmd.innerHTML = '<pre class="bg-gray-100 px-2 py-1.5 rounded text-gray-700 text-xs mt-1 overflow-x-auto">~/.boxcheckr/uninstall.sh</pre>';
+    }
     updateCommands();
 }
 
