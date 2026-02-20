@@ -37,6 +37,12 @@ type InventorySnapshot struct {
 	RawData               string    `json:"raw_data"`
 }
 
+// MachineWithLatest combines machine info with its latest snapshot
+type MachineWithLatest struct {
+	Machine
+	Latest *InventorySnapshot `json:"latest,omitempty"`
+}
+
 // MachineWithOwner combines machine info with owner details for admin views
 type MachineWithOwner struct {
 	Machine

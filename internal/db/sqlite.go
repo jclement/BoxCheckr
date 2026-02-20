@@ -199,6 +199,75 @@ func (db *DB) GetMachinesByUser(userID string) ([]Machine, error) {
 	return machines, rows.Err()
 }
 
+// GetMachinesWithLatestByUser returns all machines for a user with their latest snapshot in a single query
+func (db *DB) GetMachinesWithLatestByUser(userID string) ([]MachineWithLatest, error) {
+	rows, err := db.conn.Query(`
+		SELECT
+			m.id, m.user_id, m.name, m.enrollment_token, m.created_at,
+			s.id, s.collected_at, s.hostname, s.os, s.os_version,
+			s.disk_encrypted, s.disk_encryption_details, s.antivirus_enabled, s.antivirus_details,
+			s.firewall_enabled, s.firewall_details, s.screen_lock_enabled, s.screen_lock_timeout, s.screen_lock_details
+		FROM machines m
+		LEFT JOIN inventory_snapshots s ON s.id = (
+			SELECT id FROM inventory_snapshots
+			WHERE machine_id = m.id
+			ORDER BY collected_at DESC
+			LIMIT 1
+		)
+		WHERE m.user_id = ?
+		ORDER BY COALESCE(s.collected_at, m.created_at) DESC
+	`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var machines []MachineWithLatest
+	for rows.Next() {
+		var mwl MachineWithLatest
+		var snapshotID sql.NullInt64
+		var collectedAt sql.NullTime
+		var hostname, os, osVersion sql.NullString
+		var diskEncrypted, avEnabled sql.NullBool
+		var diskDetails, avDetails sql.NullString
+		var fwEnabled, slEnabled sql.NullBool
+		var fwDetails, slDetails sql.NullString
+		var slTimeout sql.NullInt64
+
+		if err := rows.Scan(
+			&mwl.ID, &mwl.UserID, &mwl.Name, &mwl.EnrollmentToken, &mwl.CreatedAt,
+			&snapshotID, &collectedAt, &hostname, &os, &osVersion,
+			&diskEncrypted, &diskDetails, &avEnabled, &avDetails,
+			&fwEnabled, &fwDetails, &slEnabled, &slTimeout, &slDetails,
+		); err != nil {
+			return nil, err
+		}
+
+		if snapshotID.Valid {
+			mwl.Latest = &InventorySnapshot{
+				ID:                    snapshotID.Int64,
+				MachineID:             mwl.ID,
+				CollectedAt:           collectedAt.Time,
+				Hostname:              hostname.String,
+				OS:                    os.String,
+				OSVersion:             osVersion.String,
+				DiskEncrypted:         diskEncrypted.Bool,
+				DiskEncryptionDetails: diskDetails.String,
+				AntivirusEnabled:      avEnabled.Bool,
+				AntivirusDetails:      avDetails.String,
+				FirewallEnabled:       fwEnabled.Bool,
+				FirewallDetails:       fwDetails.String,
+				ScreenLockEnabled:     slEnabled.Bool,
+				ScreenLockTimeout:     int(slTimeout.Int64),
+				ScreenLockDetails:     slDetails.String,
+			}
+		}
+
+		machines = append(machines, mwl)
+	}
+	return machines, rows.Err()
+}
+
 func (db *DB) DeleteMachine(id string) error {
 	tx, err := db.conn.Begin()
 	if err != nil {
@@ -219,18 +288,23 @@ func (db *DB) DeleteMachine(id string) error {
 	return tx.Commit()
 }
 
-// Admin: Get all machines with owner info
+// Admin: Get all machines with owner info and latest snapshot in a single query
 func (db *DB) GetAllMachinesWithOwners(filterOwner, filterMachine string) ([]MachineWithOwner, error) {
 	query := `
-		SELECT m.id, m.user_id, m.name, m.enrollment_token, m.created_at,
-		       u.email, u.name
+		SELECT
+			m.id, m.user_id, m.name, m.enrollment_token, m.created_at,
+			u.email, u.name,
+			s.id, s.collected_at, s.hostname, s.os, s.os_version,
+			s.disk_encrypted, s.disk_encryption_details, s.antivirus_enabled, s.antivirus_details,
+			s.firewall_enabled, s.firewall_details, s.screen_lock_enabled, s.screen_lock_timeout, s.screen_lock_details
 		FROM machines m
 		JOIN users u ON m.user_id = u.id
-		LEFT JOIN (
-			SELECT machine_id, MAX(collected_at) as last_update
-			FROM inventory_snapshots
-			GROUP BY machine_id
-		) s ON m.id = s.machine_id
+		LEFT JOIN inventory_snapshots s ON s.id = (
+			SELECT id FROM inventory_snapshots
+			WHERE machine_id = m.id
+			ORDER BY collected_at DESC
+			LIMIT 1
+		)
 		WHERE 1=1
 	`
 	args := []interface{}{}
@@ -244,7 +318,7 @@ func (db *DB) GetAllMachinesWithOwners(filterOwner, filterMachine string) ([]Mac
 		args = append(args, "%"+filterMachine+"%")
 	}
 
-	query += ` ORDER BY LOWER(u.name), LOWER(u.email), COALESCE(s.last_update, m.created_at) DESC`
+	query += ` ORDER BY LOWER(u.name), LOWER(u.email), COALESCE(s.collected_at, m.created_at) DESC`
 
 	rows, err := db.conn.Query(query, args...)
 	if err != nil {
@@ -255,16 +329,50 @@ func (db *DB) GetAllMachinesWithOwners(filterOwner, filterMachine string) ([]Mac
 	var machines []MachineWithOwner
 	for rows.Next() {
 		var m MachineWithOwner
-		if err := rows.Scan(&m.ID, &m.UserID, &m.Name, &m.EnrollmentToken, &m.CreatedAt, &m.OwnerEmail, &m.OwnerName); err != nil {
+		var snapshotID sql.NullInt64
+		var collectedAt sql.NullTime
+		var hostname, os, osVersion sql.NullString
+		var diskEncrypted, avEnabled sql.NullBool
+		var diskDetails, avDetails sql.NullString
+		var fwEnabled, slEnabled sql.NullBool
+		var fwDetails, slDetails sql.NullString
+		var slTimeout sql.NullInt64
+
+		if err := rows.Scan(
+			&m.ID, &m.UserID, &m.Name, &m.EnrollmentToken, &m.CreatedAt,
+			&m.OwnerEmail, &m.OwnerName,
+			&snapshotID, &collectedAt, &hostname, &os, &osVersion,
+			&diskEncrypted, &diskDetails, &avEnabled, &avDetails,
+			&fwEnabled, &fwDetails, &slEnabled, &slTimeout, &slDetails,
+		); err != nil {
 			return nil, err
 		}
+
+		if snapshotID.Valid {
+			m.Latest = &InventorySnapshot{
+				ID:                    snapshotID.Int64,
+				MachineID:             m.ID,
+				CollectedAt:           collectedAt.Time,
+				Hostname:              hostname.String,
+				OS:                    os.String,
+				OSVersion:             osVersion.String,
+				DiskEncrypted:         diskEncrypted.Bool,
+				DiskEncryptionDetails: diskDetails.String,
+				AntivirusEnabled:      avEnabled.Bool,
+				AntivirusDetails:      avDetails.String,
+				FirewallEnabled:       fwEnabled.Bool,
+				FirewallDetails:       fwDetails.String,
+				ScreenLockEnabled:     slEnabled.Bool,
+				ScreenLockTimeout:     int(slTimeout.Int64),
+				ScreenLockDetails:     slDetails.String,
+			}
+		}
+
 		machines = append(machines, m)
 	}
 
-	// Fetch latest snapshot and notes for each machine
+	// Notes still fetched separately (one-to-many relationship)
 	for i := range machines {
-		latest, _ := db.GetLatestSnapshot(machines[i].ID)
-		machines[i].Latest = latest
 		notes, _ := db.GetMachineNotes(machines[i].ID)
 		machines[i].Notes = notes
 	}
