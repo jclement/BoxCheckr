@@ -1,0 +1,118 @@
+[tools]
+go = "1.25"
+goreleaser = "latest"
+"go:github.com/air-verse/air" = "latest"
+
+[tasks.dev]
+description = "Run development server with hot-reload"
+run = "air"
+
+[tasks.test]
+description = "Run all tests"
+run = "go test -v ./..."
+
+[tasks.build]
+description = "Build the binary"
+run = "go build -o boxcheckr ./cmd/server"
+
+[tasks.lint]
+description = "Run go vet"
+run = "go vet ./..."
+
+[tasks.release]
+description = "Create a new release (bumps minor version by default)"
+run = """
+#!/bin/bash
+set -e
+
+REPO="jclement/boxcheckr"
+
+# Get latest release version using GitHub API (no gh CLI required)
+echo "Fetching latest release from $REPO..."
+LATEST=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" 2>/dev/null | grep -o '"tag_name": *"[^"]*"' | cut -d'"' -f4 || echo "")
+
+if [ -z "$LATEST" ]; then
+    LATEST="v0.0.0"
+    echo "No existing releases found. Starting from v0.0.0"
+else
+    echo "Latest release: $LATEST"
+fi
+
+# Parse version (remove 'v' prefix)
+VERSION="${LATEST#v}"
+MAJOR=$(echo "$VERSION" | cut -d. -f1)
+MINOR=$(echo "$VERSION" | cut -d. -f2)
+PATCH=$(echo "$VERSION" | cut -d. -f3)
+
+# Bump minor version by default
+NEW_MINOR=$((MINOR + 1))
+SUGGESTED="v${MAJOR}.${NEW_MINOR}.0"
+
+echo ""
+echo "Suggested next version: $SUGGESTED"
+echo ""
+read -p "Enter version to release (or press Enter for $SUGGESTED): " INPUT_VERSION
+
+if [ -z "$INPUT_VERSION" ]; then
+    NEW_VERSION="$SUGGESTED"
+else
+    # Ensure it starts with 'v'
+    if [[ ! "$INPUT_VERSION" =~ ^v ]]; then
+        NEW_VERSION="v$INPUT_VERSION"
+    else
+        NEW_VERSION="$INPUT_VERSION"
+    fi
+fi
+
+echo ""
+echo "Creating release $NEW_VERSION..."
+echo ""
+
+# Run tests first
+echo "Running tests..."
+go test ./...
+
+# Create and push tag
+echo "Creating tag $NEW_VERSION..."
+git tag -a "$NEW_VERSION" -m "Release $NEW_VERSION"
+git push origin "$NEW_VERSION"
+
+echo ""
+echo "Tag $NEW_VERSION pushed. GitHub Actions will build and publish the release."
+echo "Watch progress at: https://github.com/$REPO/actions"
+"""
+
+# =============================================================================
+# Environment Variables for OIDC Configuration
+# =============================================================================
+#
+# BoxCheckr uses Microsoft Entra ID (Azure AD) for authentication.
+# Configure these environment variables before running:
+#
+# Required:
+#   AZURE_TENANT_ID      - Your Azure AD tenant ID
+#   AZURE_CLIENT_ID      - Application (client) ID from Azure App Registration
+#   AZURE_CLIENT_SECRET  - Client secret from Azure App Registration
+#
+# Optional:
+#   AZURE_ADMIN_ROLE     - Name of the App Role for admin access (default: "InventoryAdmin")
+#   SESSION_SECRET       - Secret for session encryption (auto-generated if not set)
+#   PORT                 - Server port (default: 8080)
+#   BASE_URL             - Public URL of the service (default: http://localhost:8080)
+#   DATABASE_PATH        - Path to SQLite database (default: ./boxcheckr.db)
+#
+# Azure App Registration Setup:
+# 1. Go to Azure Portal > Azure Active Directory > App registrations
+# 2. Create new registration with redirect URI: {BASE_URL}/auth/callback
+# 3. Under "Certificates & secrets", create a new client secret
+# 4. Under "API permissions", add Microsoft Graph > User.Read (delegated)
+# 5. Under "App roles", create a role named "InventoryAdmin" for admin access
+# 6. Assign the InventoryAdmin role to admin users in Enterprise Applications
+#
+# Example .env file:
+#   AZURE_TENANT_ID=your-tenant-id
+#   AZURE_CLIENT_ID=your-client-id
+#   AZURE_CLIENT_SECRET=your-secret
+#   AZURE_ADMIN_ROLE=InventoryAdmin
+#   BASE_URL=https://inventory.yourcompany.com
+# =============================================================================

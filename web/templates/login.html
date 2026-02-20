@@ -1,0 +1,39 @@
+{{define "content"}}
+<div class="min-h-[80vh] flex items-center justify-center">
+    <div class="max-w-md w-full space-y-8">
+        <div class="text-center">
+            <img src="/static/boxcheckr.png" alt="BoxCheckr" class="mx-auto w-48 h-auto">
+            <p class="mt-4 text-gray-600">Machine inventory made simple</p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-8">
+            <div class="space-y-6">
+                <div class="text-center">
+                    <h2 class="text-xl font-semibold text-gray-900">Sign in to continue</h2>
+                    <p class="mt-1 text-sm text-gray-500">Use your organization account</p>
+                </div>
+
+                <a href="/auth/login"
+                   class="w-full flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                    <svg class="w-5 h-5 mr-2" viewBox="0 0 21 21" fill="currentColor">
+                        <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+                        <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+                        <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+                        <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+                    </svg>
+                    Sign in with Microsoft
+                </a>
+            </div>
+        </div>
+
+        <div class="bg-blue-50 rounded-lg p-4">
+            <h3 class="font-medium text-blue-900">What is BoxCheckr?</h3>
+            <p class="mt-1 text-sm text-blue-700">
+                BoxCheckr helps you keep track of your machine's security status.
+                Enroll your devices to verify disk encryption and antivirus protection
+                are enabled - keeping you and your organization secure.
+            </p>
+        </div>
+    </div>
+</div>
+{{end}}

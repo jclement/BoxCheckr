@@ -1,0 +1,24 @@
+{{define "content"}}
+<div class="min-h-[80vh] flex items-center justify-center">
+    <div class="max-w-md w-full space-y-8">
+        <div class="text-center">
+            <img src="/static/boxcheckr.png" alt="BoxCheckr" class="mx-auto w-48 h-auto">
+            <h2 class="mt-6 text-2xl font-bold text-gray-900">You've been signed out</h2>
+            <p class="mt-2 text-gray-600">Thanks for using BoxCheckr</p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-8">
+            <div class="space-y-4 text-center">
+                <svg class="mx-auto h-16 w-16 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <p class="text-gray-600">Your session has been securely ended.</p>
+                <a href="/auth/login"
+                   class="mt-4 w-full inline-flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                    Sign in again
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

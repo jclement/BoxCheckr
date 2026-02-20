@@ -1,0 +1,344 @@
+{{define "content"}}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <nav class="flex" aria-label="Breadcrumb">
+                <ol class="flex items-center space-x-2">
+                    <li><a href="/" class="text-gray-500 hover:text-gray-700">My Machines</a></li>
+                    <li><span class="text-gray-400">/</span></li>
+                    <li class="text-gray-900 font-medium">{{.Machine.Name}}</li>
+                </ol>
+            </nav>
+            <h1 class="mt-2 text-2xl font-bold text-gray-900">{{.Machine.Name}}</h1>
+            <p class="text-sm text-gray-500">Enrolled {{.Machine.CreatedAt.Format "January 2, 2006"}}</p>
+        </div>
+        <form method="POST" action="/machines/{{.Machine.ID}}/delete" onsubmit="return confirm('Are you sure you want to delete this machine? This cannot be undone.');">
+            <button type="submit" class="inline-flex items-center px-3 py-2 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-white hover:bg-red-50">
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                Delete
+            </button>
+        </form>
+    </div>
+
+    {{if .Latest}}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="text-sm font-medium text-gray-500">Hostname</div>
+            <div class="mt-1 text-lg font-semibold text-gray-900">{{.Latest.Hostname}}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="text-sm font-medium text-gray-500">Operating System</div>
+            <div class="mt-1 text-lg font-semibold text-gray-900">{{.Latest.OS}} {{.Latest.OSVersion}}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="text-sm font-medium text-gray-500">Disk Encryption</div>
+            <div class="mt-1">
+                {{if .Latest.DiskEncrypted}}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Encrypted</span>
+                {{else}}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Not Encrypted</span>
+                {{end}}
+            </div>
+            {{if .Latest.DiskEncryptionDetails}}<p class="mt-1 text-sm text-gray-500">{{.Latest.DiskEncryptionDetails}}</p>{{end}}
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="text-sm font-medium text-gray-500">Antivirus</div>
+            <div class="mt-1">
+                {{if .Latest.AntivirusEnabled}}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Protected</span>
+                {{else}}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Not Protected</span>
+                {{end}}
+            </div>
+            {{if .Latest.AntivirusDetails}}<p class="mt-1 text-sm text-gray-500">{{.Latest.AntivirusDetails}}</p>{{end}}
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="text-sm font-medium text-gray-500">Firewall</div>
+            <div class="mt-1">
+                {{if .Latest.FirewallEnabled}}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Enabled</span>
+                {{else}}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Disabled</span>
+                {{end}}
+            </div>
+            {{if .Latest.FirewallDetails}}<p class="mt-1 text-sm text-gray-500">{{.Latest.FirewallDetails}}</p>{{end}}
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="text-sm font-medium text-gray-500">Screen Lock</div>
+            <div class="mt-1">
+                {{if .Latest.ScreenLockEnabled}}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Enabled</span>
+                {{else}}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Not Configured</span>
+                {{end}}
+            </div>
+            {{if .Latest.ScreenLockDetails}}<p class="mt-1 text-sm text-gray-500">{{.Latest.ScreenLockDetails}}</p>{{end}}
+        </div>
+    </div>
+    {{else}}
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <div class="flex">
+            <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+            </svg>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-yellow-800">Awaiting first report</h3>
+                <p class="mt-1 text-sm text-yellow-700">This machine hasn't reported yet. Run the script below to collect inventory data.</p>
+            </div>
+        </div>
+    </div>
+    {{end}}
+
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Install Script</h2>
+            <p class="text-sm text-gray-500">Download and run the script on your machine</p>
+        </div>
+        <div class="p-6">
+            <!-- Mode selection -->
+            <div class="flex flex-wrap gap-2 mb-6">
+                <button onclick="setMode('onetime')" id="btn-onetime" class="px-4 py-2 text-sm font-medium rounded-md bg-indigo-100 text-indigo-700">
+                    One-Time Scan
+                </button>
+                <button onclick="setMode('monitor')" id="btn-monitor" class="px-4 py-2 text-sm font-medium rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200">
+                    Weekly Monitoring
+                </button>
+            </div>
+
+            <p id="mode-desc-onetime" class="text-sm text-gray-600 mb-4">
+                Run once to check your machine's current security status. Re-run anytime for an updated check.
+            </p>
+            <p id="mode-desc-monitor" class="text-sm text-gray-600 mb-4 hidden">
+                Installs a scheduled task that runs weekly and reports automatically. Easy to uninstall.
+            </p>
+
+            <!-- Platform selection -->
+            <div class="flex flex-wrap gap-2 mb-6">
+                <button onclick="setPlatform('darwin')" id="btn-darwin" class="flex items-center px-4 py-2 text-sm font-medium rounded-md border-2 border-transparent bg-gray-100 text-gray-700 hover:bg-gray-200">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                    macOS
+                </button>
+                <button onclick="setPlatform('linux')" id="btn-linux" class="flex items-center px-4 py-2 text-sm font-medium rounded-md border-2 border-transparent bg-gray-100 text-gray-700 hover:bg-gray-200">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M12.504 0c-.155 0-.315.008-.48.021-4.226.333-3.105 4.807-3.17 6.298-.076 1.092-.3 1.953-1.05 3.02-.885 1.051-2.127 2.75-2.716 4.521-.278.832-.41 1.684-.287 2.489a.424.424 0 00-.11.135c-.26.268-.45.6-.663.839-.199.199-.485.267-.797.4-.313.136-.658.269-.864.68-.09.189-.136.394-.132.602 0 .199.027.4.055.536.058.399.116.728.04.97-.249.68-.28 1.145-.106 1.484.174.334.535.47.94.601.81.2 1.91.135 2.774.6.926.466 1.866.67 2.616.47.526-.116.97-.464 1.208-.946.587-.003 1.23-.269 2.26-.334.699-.058 1.574.267 2.577.2.025.134.063.198.114.333l.003.003c.391.778 1.113 1.132 1.884 1.071.771-.06 1.592-.536 2.257-1.306.631-.765 1.683-1.084 2.378-1.503.348-.199.629-.469.649-.853.023-.4-.2-.811-.714-1.376v-.097l-.003-.003c-.17-.2-.25-.535-.338-.926-.085-.401-.182-.786-.492-1.046h-.003c-.059-.054-.123-.067-.188-.135a.357.357 0 00-.19-.064c.431-1.278.264-2.55-.173-3.694-.533-1.41-1.465-2.638-2.175-3.483-.796-1.005-1.576-1.957-1.56-3.368.026-2.152.236-6.133-3.544-6.139z"/></svg>
+                    Linux
+                </button>
+                <button onclick="setPlatform('windows')" id="btn-windows" class="flex items-center px-4 py-2 text-sm font-medium rounded-md border-2 border-transparent bg-gray-100 text-gray-700 hover:bg-gray-200">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z"/></svg>
+                    Windows
+                </button>
+            </div>
+
+            <!-- Quick run command (Unix) -->
+            <div id="quick-run-unix">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium text-gray-700">Quick run (paste in Terminal):</span>
+                    <button onclick="copyCommand()" id="copy-btn" class="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-800">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                        </svg>
+                        <span id="copy-text">Copy</span>
+                    </button>
+                </div>
+                <div class="bg-gray-900 rounded-lg p-4 font-mono text-sm overflow-x-auto">
+                    <code id="quick-run-code" class="text-green-400"></code>
+                </div>
+            </div>
+
+            <!-- Quick run command (Windows) -->
+            <div id="quick-run-windows" class="hidden">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium text-gray-700">Quick run (paste in PowerShell as Admin):</span>
+                    <button onclick="copyCommand()" class="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-800">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                        </svg>
+                        <span>Copy</span>
+                    </button>
+                </div>
+                <div class="bg-gray-900 rounded-lg p-4 font-mono text-sm overflow-x-auto">
+                    <code id="quick-run-code-win" class="text-green-400"></code>
+                </div>
+            </div>
+
+            <!-- View/Download links -->
+            <div class="mt-4 flex flex-wrap items-center gap-4">
+                <a id="download-link" href="#" download class="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-800">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    Download script
+                </a>
+                <a id="view-link" href="#" target="_blank" class="inline-flex items-center text-sm text-gray-600 hover:text-gray-800">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                    View full script
+                </a>
+            </div>
+
+            <div id="uninstall-note" class="mt-4 text-sm text-gray-500 hidden">
+                To uninstall later: <code class="bg-gray-100 px-1.5 py-0.5 rounded text-gray-700">boxcheckr-uninstall</code>
+            </div>
+
+            <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                <p class="text-sm text-blue-700">
+                    <strong>Privacy:</strong> Scripts only collect hostname, OS version, disk encryption, antivirus, firewall, and screen lock status. No personal files or data are accessed.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    {{if .History}}
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">History</h2>
+            <p class="text-sm text-gray-500">Previous inventory snapshots</p>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">OS</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Disk</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">AV</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Firewall</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lock</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {{range .History}}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{.CollectedAt.Format "Jan 2, 2006 15:04"}}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{.OS}} {{.OSVersion}}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {{if .DiskEncrypted}}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Yes</span>
+                            {{else}}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">No</span>
+                            {{end}}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {{if .AntivirusEnabled}}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Yes</span>
+                            {{else}}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">No</span>
+                            {{end}}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {{if .FirewallEnabled}}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Yes</span>
+                            {{else}}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">No</span>
+                            {{end}}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {{if .ScreenLockEnabled}}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Yes</span>
+                            {{else}}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">No</span>
+                            {{end}}
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {{end}}
+</div>
+
+<script>
+const baseURL = '{{.BaseURL}}';
+const machineID = '{{.Machine.ID}}';
+let currentMode = 'onetime';
+let currentPlatform = 'darwin';
+
+// Auto-detect platform
+function detectPlatform() {
+    const ua = navigator.userAgent.toLowerCase();
+    if (ua.includes('win')) return 'windows';
+    if (ua.includes('linux')) return 'linux';
+    return 'darwin';
+}
+
+function setMode(mode) {
+    currentMode = mode;
+    // Update mode buttons
+    document.getElementById('btn-onetime').classList.toggle('bg-indigo-100', mode === 'onetime');
+    document.getElementById('btn-onetime').classList.toggle('text-indigo-700', mode === 'onetime');
+    document.getElementById('btn-onetime').classList.toggle('bg-gray-100', mode !== 'onetime');
+    document.getElementById('btn-onetime').classList.toggle('text-gray-700', mode !== 'onetime');
+    document.getElementById('btn-monitor').classList.toggle('bg-indigo-100', mode === 'monitor');
+    document.getElementById('btn-monitor').classList.toggle('text-indigo-700', mode === 'monitor');
+    document.getElementById('btn-monitor').classList.toggle('bg-gray-100', mode !== 'monitor');
+    document.getElementById('btn-monitor').classList.toggle('text-gray-700', mode !== 'monitor');
+    // Update descriptions
+    document.getElementById('mode-desc-onetime').classList.toggle('hidden', mode !== 'onetime');
+    document.getElementById('mode-desc-monitor').classList.toggle('hidden', mode !== 'monitor');
+    // Update uninstall note
+    document.getElementById('uninstall-note').classList.toggle('hidden', mode !== 'monitor');
+    updateCommands();
+}
+
+function setPlatform(platform) {
+    currentPlatform = platform;
+    // Update platform buttons
+    ['darwin', 'linux', 'windows'].forEach(p => {
+        const btn = document.getElementById('btn-' + p);
+        btn.classList.toggle('border-indigo-500', p === platform);
+        btn.classList.toggle('bg-indigo-50', p === platform);
+        btn.classList.toggle('border-transparent', p !== platform);
+        btn.classList.toggle('bg-gray-100', p !== platform);
+    });
+    // Toggle Unix/Windows command display
+    document.getElementById('quick-run-unix').classList.toggle('hidden', platform === 'windows');
+    document.getElementById('quick-run-windows').classList.toggle('hidden', platform !== 'windows');
+    updateCommands();
+}
+
+function updateCommands() {
+    const scriptURL = baseURL + '/machines/' + machineID + '/script?mode=' + currentMode + '&os=' + currentPlatform;
+
+    if (currentPlatform === 'windows') {
+        const psCmd = 'irm "' + scriptURL + '" | iex';
+        document.getElementById('quick-run-code-win').textContent = psCmd;
+    } else {
+        const bashCmd = 'curl -fsSL "' + scriptURL + '" | bash';
+        document.getElementById('quick-run-code').textContent = bashCmd;
+    }
+
+    // Update download/view links
+    const ext = currentPlatform === 'windows' ? '.ps1' : '.sh';
+    document.getElementById('download-link').href = scriptURL;
+    document.getElementById('download-link').download = 'boxcheckr-' + currentPlatform + ext;
+    document.getElementById('view-link').href = scriptURL;
+}
+
+function copyCommand() {
+    let cmd;
+    const scriptURL = baseURL + '/machines/' + machineID + '/script?mode=' + currentMode + '&os=' + currentPlatform;
+    if (currentPlatform === 'windows') {
+        cmd = 'irm "' + scriptURL + '" | iex';
+    } else {
+        cmd = 'curl -fsSL "' + scriptURL + '" | bash';
+    }
+    navigator.clipboard.writeText(cmd).then(() => {
+        const copyText = document.getElementById('copy-text');
+        if (copyText) {
+            copyText.textContent = 'Copied!';
+            setTimeout(() => { copyText.textContent = 'Copy'; }, 2000);
+        }
+    });
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const detected = detectPlatform();
+    setPlatform(detected);
+    setMode('onetime');
+});
+</script>
+{{end}}

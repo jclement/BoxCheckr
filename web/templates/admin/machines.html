@@ -1,0 +1,234 @@
+{{define "content"}}
+<style>
+@media print {
+    nav, footer, .no-print { display: none !important; }
+    body { background: white !important; }
+    main { padding: 0 !important; max-width: none !important; }
+    .print-header { display: block !important; }
+    .shadow { box-shadow: none !important; }
+    table { font-size: 9px !important; }
+    td, th { padding: 2px 6px !important; }
+    .rounded-lg { border-radius: 0 !important; }
+}
+.print-header { display: none; }
+.status-badge { position: relative; cursor: help; }
+.status-badge:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 100%;
+    margin-bottom: 4px;
+    padding: 4px 8px;
+    background: #1f2937;
+    color: white;
+    font-size: 11px;
+    border-radius: 4px;
+    white-space: nowrap;
+    z-index: 50;
+}
+</style>
+<div class="space-y-6">
+    <div class="print-header">
+        <h1 class="text-xl font-bold">BoxCheckr - Machine Inventory Report</h1>
+        <p class="text-sm text-gray-600">Generated: {{now.Format "Jan 2, 2006 3:04 PM"}}</p>
+    </div>
+    <div class="no-print">
+        <h1 class="text-2xl font-bold text-gray-900">All Machines</h1>
+        <p class="mt-1 text-gray-600">View and manage all enrolled devices across the organization</p>
+    </div>
+
+    <div class="bg-white shadow rounded-lg p-4 no-print">
+        <form method="GET" action="/admin/machines" class="flex flex-wrap gap-4">
+            <div class="flex-1 min-w-[200px]">
+                <label for="owner" class="block text-sm font-medium text-gray-700">Owner</label>
+                <input type="text" name="owner" id="owner" value="{{.FilterOwner}}"
+                       placeholder="Filter by email or name"
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 border text-sm">
+            </div>
+            <div class="flex-1 min-w-[200px]">
+                <label for="machine" class="block text-sm font-medium text-gray-700">Machine</label>
+                <input type="text" name="machine" id="machine" value="{{.FilterMachine}}"
+                       placeholder="Filter by machine name"
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 border text-sm">
+            </div>
+            <div class="flex items-end">
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium">
+                    Filter
+                </button>
+                {{if or .FilterOwner .FilterMachine}}
+                <a href="/admin/machines" class="ml-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm font-medium">
+                    Clear
+                </a>
+                {{end}}
+            </div>
+        </form>
+    </div>
+
+    <div class="bg-white shadow rounded-lg overflow-x-auto">
+        <div class="px-4 py-2 border-b border-gray-200 bg-gray-50 no-print">
+            <span class="text-sm text-gray-600">{{if .Machines}}{{len .Machines}}{{else}}0{{end}} machines</span>
+        </div>
+        {{if .Machines}}
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
+                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Machine</th>
+                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">OS</th>
+                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Disk</th>
+                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">AV</th>
+                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">FW</th>
+                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lock</th>
+                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Report</th>
+                    <th scope="col" class="relative px-3 py-2 no-print"><span class="sr-only">Actions</span></th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {{range .Machines}}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-3 py-2 whitespace-nowrap">
+                        <div class="font-medium text-gray-900">{{.OwnerName}}</div>
+                        <div class="text-xs text-gray-500">{{.OwnerEmail}}</div>
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap">
+                        <div class="font-medium text-gray-900">{{.Name}}</div>
+                        {{if .Latest}}<div class="text-xs text-gray-500">{{.Latest.Hostname}}</div>{{end}}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap text-gray-500">
+                        {{if .Latest}}{{.Latest.OS}} {{.Latest.OSVersion}}{{else}}<span class="text-gray-400">-</span>{{end}}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap">
+                        {{if .Latest}}
+                            {{if .Latest.DiskEncrypted}}
+                            <span class="status-badge inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800" data-tooltip="{{.Latest.DiskEncryptionDetails}}">Yes</span>
+                            {{else}}
+                            <span class="status-badge inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800" data-tooltip="{{.Latest.DiskEncryptionDetails}}">No</span>
+                            {{end}}
+                        {{else}}
+                        <span class="text-gray-400">-</span>
+                        {{end}}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap">
+                        {{if .Latest}}
+                            {{if .Latest.AntivirusEnabled}}
+                            <span class="status-badge inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800" data-tooltip="{{.Latest.AntivirusDetails}}">Yes</span>
+                            {{else}}
+                            <span class="status-badge inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800" data-tooltip="{{.Latest.AntivirusDetails}}">No</span>
+                            {{end}}
+                        {{else}}
+                        <span class="text-gray-400">-</span>
+                        {{end}}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap">
+                        {{if .Latest}}
+                            {{if .Latest.FirewallEnabled}}
+                            <span class="status-badge inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800" data-tooltip="{{.Latest.FirewallDetails}}">Yes</span>
+                            {{else}}
+                            <span class="status-badge inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800" data-tooltip="{{.Latest.FirewallDetails}}">No</span>
+                            {{end}}
+                        {{else}}
+                        <span class="text-gray-400">-</span>
+                        {{end}}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap">
+                        {{if .Latest}}
+                            {{if .Latest.ScreenLockEnabled}}
+                            <span class="status-badge inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800" data-tooltip="{{.Latest.ScreenLockDetails}}">Yes</span>
+                            {{else}}
+                            <span class="status-badge inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800" data-tooltip="{{.Latest.ScreenLockDetails}}">No</span>
+                            {{end}}
+                        {{else}}
+                        <span class="text-gray-400">-</span>
+                        {{end}}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap text-gray-500">
+                        {{if .Latest}}{{.Latest.CollectedAt.Format "Jan 2"}}{{else}}<span class="text-gray-400">-</span>{{end}}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap text-right font-medium space-x-2 no-print">
+                        <a href="/machines/{{.ID}}" class="text-indigo-600 hover:text-indigo-900">View</a>
+                        <button onclick="confirmDelete('{{.ID}}', '{{.Name}}', '{{.OwnerEmail}}')"
+                                class="text-red-600 hover:text-red-900">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+        {{else}}
+        <div class="text-center py-12">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No machines found</h3>
+            <p class="mt-1 text-sm text-gray-500">
+                {{if or .FilterOwner .FilterMachine}}Try adjusting your filters.{{else}}No machines have been enrolled yet.{{end}}
+            </p>
+        </div>
+        {{end}}
+    </div>
+</div>
+
+<!-- Delete confirmation modal -->
+<div id="delete-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3 text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+            </div>
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mt-4">Delete Machine</h3>
+            <div class="mt-2 px-7 py-3">
+                <p class="text-sm text-gray-500">
+                    Are you sure you want to delete <strong id="delete-machine-name"></strong>
+                    owned by <strong id="delete-owner-email"></strong>?
+                </p>
+                <p class="text-sm text-gray-500 mt-2">
+                    This will permanently remove the machine and all its inventory history.
+                </p>
+            </div>
+            <div class="flex justify-center gap-4 mt-4">
+                <button onclick="closeDeleteModal()"
+                        class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm font-medium">
+                    Cancel
+                </button>
+                <form id="delete-form" method="POST" class="inline">
+                    <button type="submit"
+                            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm font-medium">
+                        Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(machineId, machineName, ownerEmail) {
+    document.getElementById('delete-machine-name').textContent = machineName;
+    document.getElementById('delete-owner-email').textContent = ownerEmail;
+    document.getElementById('delete-form').action = '/admin/machines/' + machineId + '/delete';
+    document.getElementById('delete-modal').classList.remove('hidden');
+}
+
+function closeDeleteModal() {
+    document.getElementById('delete-modal').classList.add('hidden');
+}
+
+// Close modal on escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeDeleteModal();
+    }
+});
+
+// Close modal on background click
+document.getElementById('delete-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeDeleteModal();
+    }
+});
+</script>
+{{end}}

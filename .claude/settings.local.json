@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go test:*)",
+      "Bash(ls:*)",
+      "Bash(unzip:*)",
+      "Bash(go build:*)",
+      "Bash(mise install:*)",
+      "Bash(mise exec:*)",
+      "Bash(find:*)",
+      "Bash(mise tasks:*)"
+    ]
+  }
+}

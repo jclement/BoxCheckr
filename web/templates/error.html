@@ -1,0 +1,57 @@
+{{define "content"}}
+<div class="min-h-[80vh] flex items-center justify-center">
+    <div class="max-w-lg w-full text-center">
+        {{if eq .ErrorCode 404}}
+        <div class="text-9xl font-bold text-indigo-200">404</div>
+        <div class="mt-4">
+            <svg class="mx-auto h-24 w-24 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+        </div>
+        <h1 class="mt-4 text-3xl font-bold text-gray-900">Page not found</h1>
+        <p class="mt-2 text-lg text-gray-600">The page you're looking for doesn't exist or has been moved.</p>
+        {{else if eq .ErrorCode 403}}
+        <div class="text-9xl font-bold text-red-200">403</div>
+        <div class="mt-4">
+            <svg class="mx-auto h-24 w-24 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+            </svg>
+        </div>
+        <h1 class="mt-4 text-3xl font-bold text-gray-900">Access denied</h1>
+        <p class="mt-2 text-lg text-gray-600">You don't have permission to access this resource.</p>
+        {{else}}
+        <div class="text-9xl font-bold text-amber-200">{{.ErrorCode}}</div>
+        <div class="mt-4">
+            <svg class="mx-auto h-24 w-24 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+        </div>
+        <h1 class="mt-4 text-3xl font-bold text-gray-900">Something went wrong</h1>
+        <p class="mt-2 text-lg text-gray-600">{{if .ErrorMessage}}{{.ErrorMessage}}{{else}}An unexpected error occurred. Please try again.{{end}}</p>
+        {{end}}
+
+        <div class="mt-8 flex items-center justify-center gap-4">
+            <a href="/" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition-colors">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                Go home
+            </a>
+            <button onclick="history.back()" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Go back
+            </button>
+        </div>
+
+        {{if .ErrorCode}}{{if ge .ErrorCode 500}}
+        <div class="mt-8 p-4 bg-gray-100 rounded-lg">
+            <p class="text-sm text-gray-500">
+                If this problem persists, please contact your administrator.
+            </p>
+        </div>
+        {{end}}{{end}}
+    </div>
+</div>
+{{end}}

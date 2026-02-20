@@ -1,0 +1,16 @@
+FROM alpine:3.19
+
+RUN apk add --no-cache ca-certificates
+
+WORKDIR /app
+
+COPY boxcheckr .
+COPY web ./web
+
+EXPOSE 8080
+
+ENV DATABASE_PATH=/data/boxcheckr.db
+
+VOLUME ["/data"]
+
+CMD ["./boxcheckr"]

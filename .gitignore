@@ -1,0 +1,34 @@
+# Binaries
+boxcheckr
+*.exe
+
+# Database
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.db
+
+# Local config (contains secrets)
+.mise.local.toml
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+dist/
+/data/
+tmp/
+
+# Test artifacts
+coverage.out
+*.test
+
+# Logs
+*.log
