@@ -14,13 +14,21 @@ func (h *Handlers) AdminMachines(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.render(w, r, "machines.html", &PageData{
+	data := &PageData{
 		Title:         "All Machines",
 		Active:        "admin",
 		Machines:      machines,
 		FilterOwner:   filterOwner,
 		FilterMachine: filterMachine,
-	})
+	}
+
+	// HTMX request: return just the table partial
+	if r.Header.Get("HX-Request") == "true" {
+		h.renderHTMXPartial(w, "machines_table.html", "machines_table", data)
+		return
+	}
+
+	h.render(w, r, "machines.html", data)
 }
 
 func (h *Handlers) AdminDeleteMachine(w http.ResponseWriter, r *http.Request) {
@@ -40,6 +48,12 @@ func (h *Handlers) AdminDeleteMachine(w http.ResponseWriter, r *http.Request) {
 	// Delete the machine and all its snapshots
 	if err := h.db.DeleteMachine(machineID); err != nil {
 		http.Error(w, "Failed to delete machine", http.StatusInternalServerError)
+		return
+	}
+
+	// HTMX request: return empty response (row will be removed via hx-swap)
+	if r.Header.Get("HX-Request") == "true" {
+		w.WriteHeader(http.StatusOK)
 		return
 	}
 

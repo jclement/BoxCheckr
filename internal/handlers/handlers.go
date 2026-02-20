@@ -58,6 +58,10 @@ func New(database *db.DB, oidc *auth.OIDCProvider, sessions *middleware.SessionS
 		templates[page] = tmpl
 	}
 
+	// Admin partial templates (for HTMX responses)
+	machinesTablePath := filepath.Join("web", "templates", "admin", "machines_table.html")
+	templates["machines_table.html"] = template.Must(template.New("").Funcs(funcMap).ParseFiles(machinesTablePath))
+
 	// Public templates (for shared links, no auth header)
 	publicBasePath := filepath.Join("web", "templates", "public_base.html")
 	publicTemplates := []string{
@@ -178,6 +182,38 @@ func (h *Handlers) renderPublic(w http.ResponseWriter, name string, data *PageDa
 
 func (h *Handlers) NotFound(w http.ResponseWriter, r *http.Request) {
 	h.renderError(w, r, http.StatusNotFound, "")
+}
+
+// renderPartial renders a named template block without the base layout
+func (h *Handlers) renderPartial(w http.ResponseWriter, name string, tmplContent string, data interface{}) {
+	tmpl, err := template.New(name).Funcs(funcMap).Parse(tmplContent)
+	if err != nil {
+		http.Error(w, "Template error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if err := tmpl.Execute(w, data); err != nil {
+		http.Error(w, "Template error: "+err.Error(), http.StatusInternalServerError)
+	}
+}
+
+// renderHTMXPartial renders a pre-loaded partial template for HTMX responses
+func (h *Handlers) renderHTMXPartial(w http.ResponseWriter, name string, templateName string, data *PageData) {
+	tmpl, ok := h.templates[name]
+	if !ok {
+		http.Error(w, "Template not found: "+name, http.StatusInternalServerError)
+		return
+	}
+
+	var buf bytes.Buffer
+	if err := tmpl.ExecuteTemplate(&buf, templateName, data); err != nil {
+		http.Error(w, "Template error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	buf.WriteTo(w)
 }
 
 func (h *Handlers) Forbidden(w http.ResponseWriter, r *http.Request) {

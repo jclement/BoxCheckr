@@ -96,8 +96,36 @@ func (h *Handlers) DeleteMachine(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// HTMX request: return empty response (row will be removed via hx-swap)
+	if r.Header.Get("HX-Request") == "true" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
+
+// notePartialTemplate is the HTML template for a single note (used by HTMX)
+const notePartialTemplate = `<div class="border border-gray-200 rounded-lg p-4">
+    <div class="flex items-start justify-between">
+        <div class="flex-1">
+            <div class="flex items-center gap-2 mb-2">
+                <span class="font-medium text-gray-900">{{.Author}}</span>
+                <span class="text-xs text-gray-500">{{.CreatedAt.Format "Jan 2, 2006 3:04 PM"}}</span>
+            </div>
+            <div class="prose prose-sm max-w-none text-gray-700 note-content">{{.Content}}</div>
+        </div>
+        <button hx-post="/machines/{{.MachineID}}/notes/{{.ID}}/delete"
+                hx-confirm="Delete this note?"
+                hx-target="closest .border"
+                hx-swap="outerHTML swap:0.3s"
+                class="ml-4 text-gray-400 hover:text-red-600">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+    </div>
+</div>`
 
 // AddMachineNote adds a note to a machine (admin only)
 func (h *Handlers) AddMachineNote(w http.ResponseWriter, r *http.Request) {
@@ -120,8 +148,15 @@ func (h *Handlers) AddMachineNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := h.db.CreateMachineNote(machineID, user.ID, content); err != nil {
+	note, err := h.db.CreateMachineNote(machineID, user.ID, content)
+	if err != nil {
 		http.Error(w, "Failed to add note", http.StatusInternalServerError)
+		return
+	}
+
+	// HTMX request: return just the note HTML fragment
+	if r.Header.Get("HX-Request") == "true" {
+		h.renderPartial(w, "note", notePartialTemplate, note)
 		return
 	}
 
@@ -153,6 +188,12 @@ func (h *Handlers) DeleteMachineNote(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.db.DeleteMachineNote(noteID); err != nil {
 		http.Error(w, "Failed to delete note", http.StatusInternalServerError)
+		return
+	}
+
+	// HTMX request: return empty response (note will be removed via hx-swap)
+	if r.Header.Get("HX-Request") == "true" {
+		w.WriteHeader(http.StatusOK)
 		return
 	}
 

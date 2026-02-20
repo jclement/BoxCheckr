@@ -8,7 +8,8 @@
       "Bash(mise install:*)",
       "Bash(mise exec:*)",
       "Bash(find:*)",
-      "Bash(mise tasks:*)"
+      "Bash(mise tasks:*)",
+      "Bash(grep:*)"
     ]
   }
 }

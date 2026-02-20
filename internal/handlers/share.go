@@ -50,6 +50,12 @@ func (h *Handlers) DeleteShareLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// HTMX request: return empty response (row will be removed via hx-swap)
+	if r.Header.Get("HX-Request") == "true" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 	http.Redirect(w, r, "/admin/share", http.StatusSeeOther)
 }
 
