@@ -1,19 +1,17 @@
 services:
   boxcheckr:
-    build: .
+    image: ghcr.io/jclement/boxcheckr:latest
     ports:
-      - "8080:8080"
+      - "${PORT:-8080}:8080"
     environment:
       - PORT=8080
-      - BASE_URL=http://localhost:8080
+      - BASE_URL=${BASE_URL}
       - DATABASE_PATH=/data/boxcheckr.db
       - AZURE_TENANT_ID=${AZURE_TENANT_ID}
       - AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
       - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}
       - AZURE_ADMIN_ROLE=${AZURE_ADMIN_ROLE:-InventoryAdmin}
-      - SESSION_SECRET=${SESSION_SECRET:-dev-secret-change-in-production}
+      - SESSION_SECRET=${SESSION_SECRET}
     volumes:
-      - boxcheckr-data:/data
-
-volumes:
-  boxcheckr-data:
+      - ./data:/data
+    restart: unless-stopped
