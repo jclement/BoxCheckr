@@ -154,19 +154,19 @@
         <div class="p-6">
             <!-- Mode selection -->
             <div class="flex flex-wrap gap-2 mb-6">
-                <button onclick="setMode('onetime')" id="btn-onetime" class="px-4 py-2 text-sm font-medium rounded-md bg-indigo-100 text-indigo-700">
-                    One-Time Scan
-                </button>
-                <button onclick="setMode('monitor')" id="btn-monitor" class="px-4 py-2 text-sm font-medium rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200">
+                <button onclick="setMode('monitor')" id="btn-monitor" class="px-4 py-2 text-sm font-medium rounded-md bg-indigo-100 text-indigo-700">
                     Weekly Monitoring
+                </button>
+                <button onclick="setMode('onetime')" id="btn-onetime" class="px-4 py-2 text-sm font-medium rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200">
+                    One-Time Scan
                 </button>
             </div>
 
-            <p id="mode-desc-onetime" class="text-sm text-gray-600 mb-4">
-                Run once to check your machine's current security status. Re-run anytime for an updated check.
-            </p>
-            <p id="mode-desc-monitor" class="text-sm text-gray-600 mb-4 hidden">
+            <p id="mode-desc-monitor" class="text-sm text-gray-600 mb-4">
                 Installs a scheduled task that runs weekly and reports automatically. Easy to uninstall.
+            </p>
+            <p id="mode-desc-onetime" class="text-sm text-gray-600 mb-4 hidden">
+                Run once to check your machine's current security status. Re-run anytime for an updated check.
             </p>
 
             <!-- Platform selection (only shown if no history yet) -->
@@ -312,7 +312,7 @@
 const baseURL = '{{.BaseURL}}';
 const machineID = '{{.Machine.ID}}';
 const knownOS = '{{if .Latest}}{{.Latest.OS}}{{end}}';
-let currentMode = 'onetime';
+let currentMode = 'monitor';
 let currentPlatform = 'darwin';
 
 // Auto-detect platform
@@ -411,7 +411,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Use known OS from inventory if available, otherwise detect from browser
     const platform = knownOS || detectPlatform();
     setPlatform(platform);
-    setMode('onetime');
+    setMode('monitor');
 });
 
 // Render markdown in notes after marked.js loads
