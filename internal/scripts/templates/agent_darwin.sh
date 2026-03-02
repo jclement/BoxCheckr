@@ -190,7 +190,7 @@ cat > "$PLIST_PATH" << 'PLIST'
     <array>
         <string>/bin/bash</string>
         <string>-c</string>
-        <string>curl -fsSL "{{.ServerURL}}/machines/{{.MachineID}}/script?mode=onetime" | bash</string>
+        <string>curl -fsSL "{{.ServerURL}}/machines/{{.MachineID}}/script?mode=onetime&amp;os=darwin" | bash</string>
     </array>
     <key>StartCalendarInterval</key>
     <dict>

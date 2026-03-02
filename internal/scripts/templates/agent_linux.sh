@@ -208,7 +208,7 @@ echo "Installing weekly monitoring..."
 mkdir -p "$HOME/.boxcheckr"
 
 # Add cron job
-CRON_CMD="curl -fsSL '{{.ServerURL}}/machines/{{.MachineID}}/script?mode=onetime' | bash"
+CRON_CMD="curl -fsSL '{{.ServerURL}}/machines/{{.MachineID}}/script?mode=onetime&os=linux' | bash"
 CRON_ENTRY="0 9 * * 1 $CRON_CMD # boxcheckr"
 (crontab -l 2>/dev/null | grep -v boxcheckr; echo "$CRON_ENTRY") | crontab -
 

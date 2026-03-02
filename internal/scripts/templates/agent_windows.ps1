@@ -237,7 +237,7 @@ if (-not (Test-Path $ScriptDir)) {
 }
 
 # Create scheduled task
-$ScriptURL = "{{.ServerURL}}/machines/{{.MachineID}}/script?mode=onetime"
+$ScriptURL = "{{.ServerURL}}/machines/{{.MachineID}}/script?mode=onetime&os=windows"
 $TaskAction = New-ScheduledTaskAction -Execute "PowerShell.exe" `
     -Argument "-NoProfile -ExecutionPolicy Bypass -Command `"irm '$ScriptURL' | iex`""
 $TaskTrigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday -At 9am
